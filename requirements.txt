@@ -1,0 +1,10 @@
+List of Python libraries:
+
+numpy
+matplotlib
+nibabel
+tensorflow
+keras
+scikit-image
+opencv-python
+scikit-learn
