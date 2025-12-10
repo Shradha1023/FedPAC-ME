@@ -10,7 +10,7 @@ All experiments presented in the manuscript can be reproduced using the scripts 
 
 # 📁 Repository Structure
 ````
-📦 your-project/
+📦 FedPAC-ME/
 │
 ├── README.md
 ├── requirements.txt
