@@ -10,25 +10,48 @@ All experiments presented in the manuscript can be reproduced using the scripts 
 
 # 📁 Repository Structure
 ````
-FedPAC-ME/
+📦 your-project/
+│
+├── README.md
+├── requirements.txt
+├── .gitignore
+├── LICENSE   
+│
+├── notebooks/
+│   └── version1_8.ipynb
 │
 ├── src/
-│   ├── federated/           # Federated training procedures and aggregation rules
-│   ├── models/              # Model architectures including MPCL and ME modules
-│   ├── contrastive/         # Contrastive loss functions and augmentation routines
-│   ├── utils/               # Data loading, preprocessing, metrics, logging
-│   ├── evaluation/          # Evaluation scripts and statistical analysis
-│   └── main.py              # Main training and experiment entry point
+│   ├── __init__.py
+│   ├── data/
+│   │   ├── download.py
+│   │   ├── preprocess.py
+│   │   └── utils.py
+│   ├── visualization/
+│   │   ├── visualize_slices.py
+│   │   ├── plot_modalities.py
+│   │   ├── histogram_plots.py
+│   │   └── segmentation_plots.py
+│   ├── models/
+│   │   ├── unet.py
+│   │   └── other_models.py
+│   ├── training/
+│   │   ├── train.py
+│   │   └── metrics.py
+│   └── federated/
+│       ├── split_clients.py
+│       ├── fedavg.py
+│       ├── utils.py
+│       └── simulation.py
 │
-├── configs/
-│   ├── fed_config.yaml      # Federated learning configuration parameters
-│   ├── model_config.yaml    # Model-specific hyperparameters
-│   └── data_config.yaml     # Dataset paths and augmentation settings
+├── scripts/
+│   ├── run_preprocessing.sh
+│   ├── run_training.sh
+│   └── run_visualization.sh
 │
-├── data/                    # Placeholder for datasets (not included)
-│
-├── requirements.txt         # Python dependency list
-└── README.md
+└── results/
+    ├── sample_plots/
+    ├── models/
+    └── logs/
 
 ````
 
