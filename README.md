@@ -3,8 +3,37 @@ This repository contains the official implementation of FedPAC-ME, a federated l
 
 The code supports federated training with labeled and unlabeled data, multi-perspective augmentations, contrastive alignment, and client-specific expert routing. It is built for reproducibility and fully aligned with the code policies of Nature Scientific Reports.
 
-# 🧠 Overview
-This repository contains the source code used to implement the FedPAC-ME framework described in the associated manuscript. The framework integrates (i) multi-perspective contrastive learning for representation alignment and (ii) a mixture-of-experts module for client-specific personalization within a federated learning environment. The codebase supports semi-supervised training using both labeled and unlabeled medical imaging data and is designed to operate under heterogeneous (non-IID) client distributions.
+## 🧠 Overview
+This repository contains the official implementation of FedPAC-ME, a federated learning framework designed for multi-modal medical image analysis. The project includes data preprocessing, visualization, model development, and federated training for 3D MRI volumes such as those in the BraTS2020 dataset.
+
+FedPAC-ME integrates:
+
+    Perspective-Aware Contrastive Learning (PAC-L)
+    Mixture of Experts (ME) for personalization
+    Federated Aggregation (FedAvg-based)
+    Multi-modal image processing for T1, T1ce, T2, and FLAIR
+
+This repository supports all the preprocessing and visualization techniques demonstrated in the Google Colab.
+
+## 🚀 Features
+
+Automatic download and extraction of multi-modal MRI datasets
+
+Advanced visualization:
+
+1. 2D slices
+2. Multi-modality grids
+3. Segmentation mask overlays
+4. 3D volumetric rendering
+   
+Preprocessing pipeline:
+
+1. Normalization
+2. Smoothing
+3. Resampling
+4. Slice-wise extraction
+
+Federated Learning components (simulation-ready)
 
 All experiments presented in the manuscript can be reproduced using the scripts and configuration files provided here.
 
@@ -12,16 +41,10 @@ All experiments presented in the manuscript can be reproduced using the scripts 
 ````
 📦 FedPAC-ME/
 │
-├── README.md
-├── requirements.txt
-├── .gitignore
-├── LICENSE   
-│
 ├── notebooks/
 │   └── version1_8.ipynb
 │
 ├── src/
-│   ├── __init__.py
 │   ├── data/
 │   │   ├── download.py
 │   │   ├── preprocess.py
@@ -33,29 +56,39 @@ All experiments presented in the manuscript can be reproduced using the scripts 
 │   │   └── segmentation_plots.py
 │   ├── models/
 │   │   ├── unet.py
-│   │   └── other_models.py
+│   │   └── experts.py
 │   ├── training/
 │   │   ├── train.py
+│   │   ├── losses.py
 │   │   └── metrics.py
 │   └── federated/
-│       ├── split_clients.py
 │       ├── fedavg.py
+│       ├── client_simulator.py
 │       ├── utils.py
-│       └── simulation.py
+│       └── aggregation.py
 │
-├── scripts/
-│   ├── run_preprocessing.sh
-│   ├── run_training.sh
-│   └── run_visualization.sh
+├── results/
+│   ├── plots/
+│   └── models/
 │
-└── results/
-    ├── sample_plots/
-    ├── models/
-    └── logs/
+├── requirements.txt
+├── LICENSE
+├── .gitignore
+└── README.md
 
 ````
 
-# ⚙️ Installation
+## ⚙️ Installation
+
+1. Clone the repository
+````
+git clone https://github.com/yourusername/FedPAC-ME.git
+cd FedPAC-ME
+````
+3. Install dependencies
+````
+pip install -r requirements.txt
+````
 ## 🚀 Environment Setup
 
 ````
@@ -73,7 +106,7 @@ pip install -r requirements.txt
 
 ````
 
-## 🗂️ Dataset Preparation
+## 📥 Dataset Preparation
 Datasets are not included in this repository. Users should:
 
 Download the dataset(s) used in the manuscript
@@ -85,6 +118,8 @@ To reproduce the main experimental results:
 ```
 python src/main.py --config configs/fed_config.yaml
 ```
+
+
 # 📊 Evaluation Procedures
 To evaluate a trained global model:
 ```
