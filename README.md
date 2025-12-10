@@ -41,22 +41,27 @@ All experiments presented in the manuscript can be reproduced using the scripts 
 ````
 📦 FedPAC-ME/
 │
-├── notebooks/
-│   └── version1_8.ipynb
 │
 ├── src/
 │   ├── data/
 │   │   ├── download.py
 │   │   ├── preprocess.py
 │   │   └── utils.py
+│   ├── preprocess/
+│   │   ├── dataloaders.py
+│   │   ├── dataset.py
+│   │   └── split_clients.py
 │   ├── visualization/
 │   │   ├── visualize_slices.py
 │   │   ├── plot_modalities.py
 │   │   ├── histogram_plots.py
 │   │   └── segmentation_plots.py
 │   ├── models/
-│   │   ├── unet.py
-│   │   └── experts.py
+│   │   ├── attention.py
+│   │   ├── attention_contrastive_model.py
+│   │   ├── loss.py
+│   │   ├── moe.py
+│   │   └── mpda.py
 │   ├── training/
 │   │   ├── train.py
 │   │   ├── losses.py
@@ -64,12 +69,11 @@ All experiments presented in the manuscript can be reproduced using the scripts 
 │   └── federated/
 │       ├── fedavg.py
 │       ├── client_simulator.py
-│       ├── utils.py
 │       └── aggregation.py
 │
 ├── results/
 │   ├── plots/
-│   └── models/
+│   └── dataset/
 │
 ├── requirements.txt
 ├── LICENSE
