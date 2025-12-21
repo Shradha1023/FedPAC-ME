@@ -16,7 +16,7 @@ class AttentionContrastiveModel(nn.Module):
     Combines a DenseNet encoder, multi-head self-attention, 
     Mixture-of-Experts (MoE) layer, and projection head for feature extraction.
     """
-    def __init__(self, feature_dim=128, num_experts=4, top_k=2):
+    def __init__(self, embed_dim=1024, feature_dim=128, num_experts=4, top_k=2):
         super().__init__()
         # Encoder backbone (DenseNet121)
         self.encoder = models.densenet121(pretrained=True)
@@ -26,27 +26,31 @@ class AttentionContrastiveModel(nn.Module):
         )
 
         # Attention and Mixture-of-Experts modules
-        self.attention = MultiHeadSelfAttention(embed_dim=1024)
-        self.moe = MixtureOfExperts(1024, num_experts=num_experts, top_k=top_k)
+        self.attention = MultiHeadSelfAttention(embed_dim, num_heads=4, batch_first=True)
+        self.norm = nn.LayerNorm(embed_dim)
+        self.moe = MixtureOfExperts(embed_dim, num_experts, top_k)
 
         # Projection head
         self.projector = nn.Sequential(
-            nn.Linear(1024, 512),
+            nn.Linear(embed_dim, 512),
             nn.ReLU(),
             nn.LayerNorm(512),
             nn.Linear(512, feature_dim)
         )
 
-    def forward(self, x):
-        # Extract features from encoder
-        x = self.encoder.features(x)
-        x = F.adaptive_avg_pool2d(x, (1, 1))
-        x = torch.flatten(x, 1)
-
-        # Apply attention and Mixture-of-Experts
-        x = self.attention(x)
-        x = self.moe(x)
-
-        # Project to feature_dim
-        x = self.projector(x)
+    def encode(self, x):
+        x = self.encoder(x)
+        x = F.adaptive_avg_pool2d(x, 1).flatten(1)   # (B,1024)
         return x
+
+    def forward(self, x):
+        x = self.encode(x)
+
+        # MHSA (Seq len = 1)
+        x_seq = x.unsqueeze(1)
+        attn_out, _ = self.attn(x_seq, x_seq, x_seq)
+        x = self.norm(x + attn_out.squeeze(1))
+
+        x = self.moe(x)
+        z = self.projector(x)
+        return F.normalize(z, dim=1)
