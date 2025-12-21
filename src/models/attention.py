@@ -20,25 +20,32 @@ class MultiHeadSelfAttention(nn.Module):
         num_heads (int): Number of attention heads
     """
 
-    def __init__(self, embed_dim, num_heads=4):
+    def __init__(self, embed_dim=1024, num_heads=4):
         super().__init__()
-        self.attention = nn.MultiheadAttention(
-            embed_dim=embed_dim,
-            num_heads=num_heads,
-            batch_first=True
-        )
+        self.num_heads = num_heads
+        self.head_dim = embed_dim // num_heads
+
+        self.qkv = nn.Linear(embed_dim, embed_dim * 3)
+        self.out = nn.Linear(embed_dim, embed_dim)
         self.norm = nn.LayerNorm(embed_dim)
 
     def forward(self, x):
-        """
-        Forward pass.
+        # x: (B, D)
+        B, D = x.shape
 
-        Args:
-            x (Tensor): Input tensor of shape (batch_size, seq_len, embed_dim)
+        qkv = self.qkv(x)                     # (B, 3D)
+        q, k, v = qkv.chunk(3, dim=-1)
 
-        Returns:
-            Tensor: Attention-refined features with same shape as input
-        """
-        attn_output, _ = self.attention(x, x, x)
-        x = self.norm(x + attn_output)  # Residual connection
-        return x
+        q = q.view(B, self.num_heads, self.head_dim)
+        k = k.view(B, self.num_heads, self.head_dim)
+        v = v.view(B, self.num_heads, self.head_dim)
+
+        attn = torch.softmax(
+            (q @ k.transpose(-2, -1)) / np.sqrt(self.head_dim),
+            dim=-1
+        )
+
+        out = (attn @ v).reshape(B, D)
+        out = self.out(out)
+
+        return self.norm(x + out)
