@@ -18,15 +18,16 @@ class MultiPerspectiveAugment:
     2. Spatial pixel shifts (SSV)
     3. Adversarial perturbations (GAV)
     """
-    def __init__(self, epsilon=0.01, shift_pixels=5):
+    def __init__(self, epsilon=0.01, sigma=0.02, shift_pixels=5):
         self.epsilon = epsilon  # For adversarial perturbation
+        self.sigma = sigma
         self.shift_pixels = shift_pixels  # Pixel shift for spatial view
 
     def perturbed_contrastive_view(self, image):
         """
         Adds small random noise to simulate intensity variation.
         """
-        noise = torch.randn_like(image) * 0.02
+        noise = torch.randn_like(image) * self.sigma
         return image + noise
 
     def spatially_shifted_view(self, image):
@@ -42,15 +43,15 @@ class MultiPerspectiveAugment:
         """
         Creates an adversarial example using FGSM (without labels).
         """
-        image = image.clone().detach().requires_grad_(True)
-        output = model(image)
+        image_adv = image.clone().detach().requires_grad_(True)
+        output = model(image_adv)
 
         # Compute a fake loss using L2 norm instead of cross-entropy
         loss = output.norm(p=2)
         loss.backward()
 
         perturbation = self.epsilon * image.grad.sign()
-        adversarial_image = image + perturbation
+        adversarial_image = image_adv + perturbation
         return adversarial_image.detach()
 
     def apply(self, model, image):
