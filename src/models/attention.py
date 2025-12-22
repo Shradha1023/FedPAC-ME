@@ -5,6 +5,7 @@ Multi-Head Self-Attention module used in FedPAC-ME.
 Applies channel-wise self-attention over global feature embeddings
 (B x D) before Mixture-of-Experts routing.
 """
+# Input: (B, 1024) global pooled features (not spatial tokens)
 
 import torch
 import torch.nn as nn
