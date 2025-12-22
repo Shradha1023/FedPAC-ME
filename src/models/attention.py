@@ -2,9 +2,10 @@
 attention.py
 
 Multi-Head Self-Attention module used in FedPAC-ME.
-Applies self-attention over feature embeddings to model
-channel-wise dependencies before Mixture-of-Experts routing.
+Applies channel-wise self-attention over global feature embeddings
+(B x D) before Mixture-of-Experts routing.
 """
+
 import torch
 import torch.nn as nn
 import math
@@ -12,11 +13,11 @@ import math
 
 class MultiHeadSelfAttention(nn.Module):
     """
-    Standard Multi-Head Self-Attention with residual connection
+    Channel-wise Multi-Head Self-Attention with residual connection
     and layer normalization.
 
     Args:
-        embed_dim (int): Embedding dimension (D)
+        embed_dim (int): Feature dimension (D)
         num_heads (int): Number of attention heads (H)
     """
 
@@ -28,32 +29,40 @@ class MultiHeadSelfAttention(nn.Module):
         self.num_heads = num_heads
         self.head_dim = embed_dim // num_heads
 
-        self.qkv = nn.Linear(embed_dim, embed_dim * 3)
+        # Linear projections
+        self.q = nn.Linear(embed_dim, embed_dim)
+        self.k = nn.Linear(embed_dim, embed_dim)
+        self.v = nn.Linear(embed_dim, embed_dim)
+
         self.out = nn.Linear(embed_dim, embed_dim)
         self.norm = nn.LayerNorm(embed_dim)
 
     def forward(self, x):
-        # x: (B, N, D)
-        B, N, D = x.shape
+        """
+        x: (B, D) — global feature vector after GAP
+        """
+        B, D = x.shape
 
-        qkv = self.qkv(x)                          # (B, N, 3D)
-        q, k, v = qkv.chunk(3, dim=-1)
+        # Linear projections
+        q = self.q(x)
+        k = self.k(x)
+        v = self.v(x)
 
-        # (B, H, N, head_dim)
-        q = q.view(B, N, self.num_heads, self.head_dim).transpose(1, 2)
-        k = k.view(B, N, self.num_heads, self.head_dim).transpose(1, 2)
-        v = v.view(B, N, self.num_heads, self.head_dim).transpose(1, 2)
+        # Split into heads: (B, H, head_dim)
+        q = q.view(B, self.num_heads, self.head_dim)
+        k = k.view(B, self.num_heads, self.head_dim)
+        v = v.view(B, self.num_heads, self.head_dim)
 
-        # Attention scores
-        attn = (q @ k.transpose(-2, -1)) / math.sqrt(self.head_dim)
-        attn = torch.softmax(attn, dim=-1)         # (B, H, N, N)
+        # Scaled dot-product attention (channel-wise)
+        attn = (q * k) / math.sqrt(self.head_dim)   # (B, H, head_dim)
+        attn = torch.softmax(attn, dim=-1)
 
-        # Weighted sum
-        out = attn @ v                             # (B, H, N, head_dim)
-        out = out.transpose(1, 2).contiguous().view(B, N, D)
+        # Weighted values
+        out = attn * v                              # (B, H, head_dim)
 
+        # Merge heads
+        out = out.view(B, D)
         out = self.out(out)
 
-        # Residual + LayerNorm
+        # Residual connection + LayerNorm
         return self.norm(x + out)
-
