@@ -7,36 +7,43 @@ for federated learning.
 
 import os
 import shutil
+import numpy as np
 
+# List all patient folders
+patient_folders = sorted(os.listdir(dataset_path))
 
-def split_dataset_into_clients(
-    dataset_path,
-    num_clients=10,
-):
-    patient_folders = sorted([
-        f for f in os.listdir(dataset_path)
-        if os.path.isdir(os.path.join(dataset_path, f))
-    ])
+num_clients = 10
+alpha = 0.5  
 
-    folders_per_client = len(patient_folders) // num_clients
+# Create client directories
+client_dirs = []
+for i in range(num_clients):
+    client_folder = os.path.join(dataset_path, f"client_{i+1}")
+    os.makedirs(client_folder, exist_ok=True)
+    client_dirs.append(client_folder)
 
-    for i in range(num_clients):
-        client_folder = os.path.join(dataset_path, f"client_{i+1}")
-        os.makedirs(client_folder, exist_ok=True)
+# Shuffle data
+np.random.shuffle(patient_folders)
 
-        start_idx = i * folders_per_client
-        end_idx = start_idx + folders_per_client
+# Generate Dirichlet distribution for all samples
+dirichlet_dist = np.random.dirichlet([alpha] * num_clients, len(patient_folders))
 
-        for folder in patient_folders[start_idx:end_idx]:
-            src = os.path.join(dataset_path, folder)
-            dst = os.path.join(client_folder, folder)
-            shutil.move(src, dst)
+# Assign each folder to a client
+client_data_count = [0] * num_clients
 
-        print(f"Client {i+1}: {folders_per_client} patients assigned")
+for idx, folder in enumerate(patient_folders):
+    src_path = os.path.join(dataset_path, folder)
 
-    print("✅ Dataset successfully split into clients")
+    # Sample client index based on Dirichlet probabilities
+    client_idx = np.argmax(dirichlet_dist[idx])
 
+    dest_path = os.path.join(client_dirs[client_idx], folder)
+    shutil.move(src_path, dest_path)
 
-if __name__ == "__main__":
-    BASE_PATH = "/content/dataset/BraTS2020_TrainingData/MICCAI_BraTS2020_TrainingData"
-    split_dataset_into_clients(BASE_PATH)
+    client_data_count[client_idx] += 1
+
+# Print distribution
+for i in range(num_clients):
+    print(f"Client {i+1}: {client_data_count[i]} folders")
+
+print("Dataset successfully divided into non-IID clients using Dirichlet distribution.")
